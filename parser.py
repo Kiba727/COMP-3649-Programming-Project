@@ -1,12 +1,4 @@
-class ThreeAddress:
-    def __init__(self, name, arg1, op, arg2, ):
-            self.name = name
-            self.arg1 = arg1
-            self.op = op
-            self.arg2 = arg2
-          
-    def __repr__(self):
-        return f"Instruction(Results: {self.name}, Op: {self.arg1}, Args: {self.op}, {self.arg2})"
+import threeAddress
 
 def readIntermediateCode(): 
     input_file = "input.txt"
@@ -31,9 +23,11 @@ def read3AddrInstruction(line):
     input_sections = line.split()
 
     if len(input_sections) == 5:
-        instruction = ThreeAddress(input_sections[0], input_sections[2], input_sections[3], input_sections[4])
-        print(f"Read instruction: {instruction}")
+        instruction = threeAddress.INSTRUCTION(input_sections[0], input_sections[2], input_sections[3], input_sections[4])
     
-    if len(input_sections) == 4:
-        instruction = ThreeAddress(input_sections[0], input_sections[2], input_sections[3], input_sections[4])
-        print("4")
+    elif len(input_sections) == 4:
+        instruction = threeAddress.INSTRUCTION(input_sections, input_sections[2], input_sections[3], None)
+    
+    else:
+        print("Bad input. Does not match expected format.")
+        print("Format: Name, operand 1, operator, operand 2(optional)")
