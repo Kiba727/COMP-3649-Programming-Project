@@ -1,0 +1,2 @@
+ABC = a + b
+live: ABC
