@@ -3,7 +3,7 @@
 
 import sys
 from parser import readIntermediateCode
-sys.argv = ["main.py", "1", "test2.txt"]
+# sys.argv = ["main.py", "1", "test2.txt"]
 
 
 def main():
