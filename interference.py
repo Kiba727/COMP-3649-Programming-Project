@@ -18,8 +18,6 @@ class InterferenceGraph:
         self.analyzer = analyzer
         # Adjacency list: key = variable name, value = set of interfering variables
         self.adj_list = {}
-        
-        # Build the graph immediately upon initialization
         self.build()
 
     def build(self):
@@ -28,14 +26,13 @@ class InterferenceGraph:
         and edges for interfering variables.
         """
         # 1. Initialize nodes for every variable found in the liveness analysis
-        # We sort them to ensure deterministic behavior (important for testing)
+        # We sort them to ensure deterministic behavior when printing the graph
         variables = sorted(self.analyzer.live_ranges.keys())
         
         for var in variables:
             self.adj_list[var] = set()
 
         # 2. Check every pair of variables for interference
-        # We use a nested loop to compare every unique pair (A, B)
         for i in range(len(variables)):
             for j in range(i + 1, len(variables)):
                 var1 = variables[i]
@@ -86,7 +83,7 @@ class InterferenceGraph:
 if __name__ == "__main__":
     from threeAddress import IntermediateCode, ThreeAddressInstruction
     
-    print("Testing InterferenceGraph module...")
+    print("Testing InterferenceGraph")
     
     # Create the example from the Project Requirements (Page 4 & 7)
     # 1: a = a + 1
@@ -95,32 +92,22 @@ if __name__ == "__main__":
     # 4: t3 = a * 3
     # 5: b = t2 - t3
     # 6: t4 = b / 2
-    # 7: d = c + t4   <-- Typo in PDF? It says t5 in one place and t4 in another. Using t4.
+    # 7: d = c + t4  
     # live: d
     
     code = IntermediateCode()
-    # Assume 'a' and 'c' are live at entry (implicitly)
-    
-    code.add_instruction(ThreeAddressInstruction("a", "a", "+", "1"))     # 1
-    code.add_instruction(ThreeAddressInstruction("t1", "a", "*", "4"))    # 2
-    code.add_instruction(ThreeAddressInstruction("t2", "t1", "+", "1"))   # 3
-    code.add_instruction(ThreeAddressInstruction("t3", "a", "*", "3"))    # 4
-    code.add_instruction(ThreeAddressInstruction("b", "t2", "-", "t3"))   # 5
-    code.add_instruction(ThreeAddressInstruction("t4", "b", "/", "2"))    # 6
-    code.add_instruction(ThreeAddressInstruction("d", "c", "+", "t4"))    # 7
+    code.add_instruction(ThreeAddressInstruction("a", "a", "+", "1"))   
+    code.add_instruction(ThreeAddressInstruction("t1", "a", "*", "4"))    
+    code.add_instruction(ThreeAddressInstruction("t2", "t1", "+", "1"))   
+    code.add_instruction(ThreeAddressInstruction("t3", "a", "*", "3"))    
+    code.add_instruction(ThreeAddressInstruction("b", "t2", "-", "t3"))   
+    code.add_instruction(ThreeAddressInstruction("t4", "b", "/", "2"))    
+    code.add_instruction(ThreeAddressInstruction("d", "c", "+", "t4"))    
     code.set_live_on_exit(["d"])
         
-    print("\n1. Running Liveness Analysis...")
     analyzer = LivenessAnalyzer(code)
     analyzer.analyze()
     analyzer.print_liveness()
     
-    print("2. Building Interference Graph...")
     graph = InterferenceGraph(analyzer)
     graph.print_graph()
-    
-    # Expected Interferences (Mental Check):
-    # 'a' is used at line 4, so it is live 1-4.
-    # 't1' is defined at 2, used at 3. Live 2-3.
-    # Do 'a' and 't1' overlap? Yes (at line 2 and 3).
-    # Check output to see if "a: ..., t1, ..." exists.
