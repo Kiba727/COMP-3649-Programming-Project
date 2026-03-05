@@ -129,7 +129,7 @@ class InterferenceGraph:
 if __name__ == "__main__":
     from threeAddress import IntermediateCode, ThreeAddressInstruction
     
-    print("Testing InterferenceGraph module...")
+    print("Testing InterferenceGraph")
     
     # Create the example from the Project Requirements (Page 4 & 7)
     # 1: a = a + 1
@@ -138,27 +138,23 @@ if __name__ == "__main__":
     # 4: t3 = a * 3
     # 5: b = t2 - t3
     # 6: t4 = b / 2
-    # 7: d = c + t4   <-- Typo in PDF? It says t5 in one place and t4 in another. Using t4.
+    # 7: d = c + t4  
     # live: d
     
     code = IntermediateCode()
-    # Assume 'a' and 'c' are live at entry (implicitly)
-    
-    code.add_instruction(ThreeAddressInstruction("a", "a", "+", "1"))     # 1
-    code.add_instruction(ThreeAddressInstruction("t1", "a", "*", "4"))    # 2
-    code.add_instruction(ThreeAddressInstruction("t2", "t1", "+", "1"))   # 3
-    code.add_instruction(ThreeAddressInstruction("t3", "a", "*", "3"))    # 4
-    code.add_instruction(ThreeAddressInstruction("b", "t2", "-", "t3"))   # 5
-    code.add_instruction(ThreeAddressInstruction("t4", "b", "/", "2"))    # 6
-    code.add_instruction(ThreeAddressInstruction("d", "c", "+", "t4"))    # 7
+    code.add_instruction(ThreeAddressInstruction("a", "a", "+", "1"))   
+    code.add_instruction(ThreeAddressInstruction("t1", "a", "*", "4"))    
+    code.add_instruction(ThreeAddressInstruction("t2", "t1", "+", "1"))   
+    code.add_instruction(ThreeAddressInstruction("t3", "a", "*", "3"))    
+    code.add_instruction(ThreeAddressInstruction("b", "t2", "-", "t3"))   
+    code.add_instruction(ThreeAddressInstruction("t4", "b", "/", "2"))    
+    code.add_instruction(ThreeAddressInstruction("d", "c", "+", "t4"))    
     code.set_live_on_exit(["d"])
         
-    print("\n1. Running Liveness Analysis...")
     analyzer = LivenessAnalyzer(code)
     analyzer.analyze()
     analyzer.print_liveness()
     
-    print("2. Building Interference Graph...")
     graph = InterferenceGraph(analyzer)
     graph.print_graph()
     
