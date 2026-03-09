@@ -1,37 +1,77 @@
 # main.py
-# Week 3 main module - command-line entry point
+# Full compiler pipeline: parse -> liveness -> interference -> allocation -> codegen
+# Usage: python main.py <num_registers> <input_file>
 
 import sys
+import os
+from collections import defaultdict
+
 from parser import readIntermediateCode
-#sys.argv = ["main.py", "1", "tests/test2.txt"]
+from liveness import LivenessAnalyzer
+from interference import InterferenceGraph
+from codegen import generate_target_code
 
 
 def main():
-    """
-    Main entry point for the code generator.
-    
-    Usage: python main.py <num_regs> <input_file>
-    
-    For Week 3, this reads and prints the intermediate code.
-    num_regs will be used in later weeks for register allocation.
-    """    
-    num_regs = int(sys.argv[1])
+    if len(sys.argv) != 3:
+        print("Usage: python main.py <num_registers> <input_file>", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        num_regs = int(sys.argv[1])
+        if num_regs < 1:
+            raise ValueError
+    except ValueError:
+        print("Error: <num_registers> must be a positive integer.", file=sys.stderr)
+        sys.exit(1)
+
     input_file = sys.argv[2]
-    
-    # Read and parse the input file
+
     intermediate_code = readIntermediateCode(input_file)
-    
-    # If parsing failed, readIntermediateCode already printed error
     if intermediate_code is None:
         sys.exit(1)
-    
-    # Print the intermediate code (Week 3 requirement)
+
+    print("=== Three-Address Code ===")
     print(intermediate_code)
-    print(f"\nNumber of registers: {num_regs}")
-    print(f"Total instructions: {len(intermediate_code)}")
-    print(f"All variables used: {sorted(intermediate_code.get_all_variables())}")
-    print(f"Live on exit: {intermediate_code.live_on_exit}")
-    
+
+    analyzer = LivenessAnalyzer(intermediate_code)
+    analyzer.analyze()
+    analyzer.print_liveness()
+
+    graph = InterferenceGraph(analyzer)
+    graph.print_graph()
+
+    success = graph.allocate_registers(num_regs)
+    if not success:
+        print(f"Register allocation failed: {num_regs} register(s) are not sufficient to colour the interference graph.")
+        sys.exit(0)
+
+    # Build and print register colouring table (R0: a, b, d format)
+    reg_to_vars = defaultdict(list)
+    for var in graph.variables:
+        reg_to_vars[graph.allocations[var]].append(var)
+
+    print("\n--- Register Colouring Table ---")
+    for reg in sorted(reg_to_vars.keys()):
+        print(f"  R{reg}: {', '.join(sorted(reg_to_vars[reg]))}")
+    print("--------------------------------")
+
+    # Variables live on entry have a range starting at 0 (used before defined)
+    live_on_entry = {
+        var for var, ranges in analyzer.live_ranges.items()
+        if any(r.start_line == 0 for r in ranges)
+    }
+
+    target = generate_target_code(intermediate_code, graph.allocations, live_on_entry)
+
+    print("\n=== Assembly Output ===")
+    print(target)
+
+    base, _ = os.path.splitext(input_file)
+    output_file = base + ".s"
+    target.write_to_file(output_file)
+    print(f"\nAssembly written to: {output_file}")
+
     sys.exit(0)
 
 
