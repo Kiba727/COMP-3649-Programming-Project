@@ -107,7 +107,7 @@ class LivenessAnalyzer:
                 # This line marks the end of its lifespan.
                 if var not in current_live_vars:
                     current_live_vars.add(var)
-                    var_range_ends[var] = line_num
+                    var_range_ends[var] = line_num + 1  # +1: end is exclusive, include last-use line
         
         # Handle variables that are used at the start of a line but never defined.
         for var in current_live_vars:
