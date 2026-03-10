@@ -8,13 +8,13 @@ from parserHelper import parseLiveLine, isValidVariable, isValidOperand
 
 def readIntermediateCode(filename):
     """
-    Primary parsing routine: reads and parses an entire input file.
+    Reads and parses input file. 
     
     Args:
-        filename: path to input file
+        filename: path to file
         
     Returns:
-        IntermediateCode object on success, None on error
+        IntermediateCode object 
     """
     try:
         with open(filename, 'r') as file:
@@ -70,7 +70,7 @@ def read3AddrInstruction(line, line_num):
     Returns:
         ThreeAddressInstruction object on success, None on error
     """
-    # Remove leading/trailing whitespace
+    # Remove white space
     line = line.strip()
     
     # Skip empty lines
@@ -78,13 +78,10 @@ def read3AddrInstruction(line, line_num):
         print(f"Error on line {line_num}: Empty line", file=sys.stderr)
         return None
     
-    # Split by whitespace (handles multiple spaces/tabs)
+    # Tokenizes line
     tokens = line.split()
     
-    # Valid instruction format: dst = src1 [op src2]
-    # Minimum: 3 tokens (dst = src)
-    # Maximum: 5 tokens (dst = src1 op src2)
-    
+    #check for invalid line
     if len(tokens) < 3:
         print(f"Error on line {line_num}: Less than 3 tokens on line", file=sys.stderr)
         return None
@@ -95,6 +92,7 @@ def read3AddrInstruction(line, line_num):
     
     # Extract destination
     dst = tokens[0]
+
     if not isValidVariable(dst):
         print(f"Error on line {line_num}: Invalid destination variable '{dst}'", file=sys.stderr)
         return None
@@ -104,8 +102,8 @@ def read3AddrInstruction(line, line_num):
         print(f"Error on line {line_num}: Missing '=' sign", file=sys.stderr)
         return None
     
-    # Parse based on number of remaining tokens
-    # Simple assignment: dst = src
+    # Parse based on number of remaining tokens for 3 cases
+    # Case 1: Simple assignment -> dst = src
     if len(tokens) == 3:
         src = tokens[2]
         if not isValidOperand(src):
@@ -113,7 +111,7 @@ def read3AddrInstruction(line, line_num):
             return None
         return ThreeAddressInstruction(dst, src, None, None)
     
-    # Unary negation: dst = -src
+    # Case 2: Unary negation -> dst = -src
     elif len(tokens) == 4:
         if tokens[2] != '-':
             print(f"Error on line {line_num}: Missing '-' negation sign", file=sys.stderr)
@@ -124,7 +122,7 @@ def read3AddrInstruction(line, line_num):
             return None
         return ThreeAddressInstruction(dst, src, '-', None)
     
-    # Binary operation: dst = src1 op src2
+    # Case 3: Binary operation -> dst = src1 op src2
     elif len(tokens) == 5:
         src1 = tokens[2]
         op = tokens[3]
@@ -144,7 +142,6 @@ def read3AddrInstruction(line, line_num):
         
         return ThreeAddressInstruction(dst, src1, op, src2)
     
-    # Should not reach here
     return None
 
 

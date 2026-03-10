@@ -159,7 +159,7 @@ if __name__ == "__main__":
     graph.print_graph()
     
     print("3. Allocating registers...")
-    num_regs = 10
+    num_regs = 4
     success = graph.allocate_registers(num_regs)
 
     if success:

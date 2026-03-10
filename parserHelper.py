@@ -62,7 +62,7 @@ def isValidVariable(name):
         # Single lowercase letter excluding 't'
         return name.islower() and name != 't'
     
-    # Check for t followed by digits (e.g., t1, t23)
+    # Check for temp variables 
     if name[0] == 't' and len(name) > 1:
         return name[1:].isdigit()
     
@@ -79,11 +79,11 @@ def isValidOperand(operand):
     Returns:
         True if valid, False otherwise
     """
-    # Check if it's a valid variable
+    # Check if is a variable
     if isValidVariable(operand):
         return True
     
-    # Check if it's an integer literal
+    # Check if is a number
     try:
         int(operand)
         return True
