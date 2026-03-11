@@ -85,21 +85,21 @@ class LivenessAnalyzer:
             # Left side of the equals sign where a variable is defined
             defined_var = instr.get_defined_variable()
             
-            # Checks if the definied variable is currently used. If it is, we can mark the end of its live range at this line.
+            # If the defined variable is currently live, mark the start of its live range here.
             if defined_var in current_live_vars:
                 start = line_num
                 end = var_range_ends[defined_var]
                 self._add_live_range(defined_var, start, end)
                 
-                # Since we are scanning backwards, this line is the last time this variable is used in the program.
+                # Variable is dead before its definition, so remove it from the current live set.
                 current_live_vars.remove(defined_var)
                 del var_range_ends[defined_var]
 
-            # If the variable defined on this line is not currently used, it means it is a dead definition. We can mark it for removal.
+            # If the variable defined on this line is not currently used, it means it is a dead definition. 
             elif defined_var is not None:
                 self.dead_definitions.append((line_num, defined_var))
                 
-            # Any variables used on the right side of the equals sign must been used.
+            # Any variables used on the right side of the equals sign must be alive.
             used_vars = instr.get_used_variables()
             
             for var in used_vars:
@@ -109,7 +109,7 @@ class LivenessAnalyzer:
                     current_live_vars.add(var)
                     var_range_ends[var] = line_num + 1  # +1: end is exclusive, include last-use line
         
-        # Handle variables that are used at the start of a line but never defined.
+        # Handle variables that are live at the start of the program used but never defined.
         for var in current_live_vars:
             start = 0 
             end = var_range_ends[var]

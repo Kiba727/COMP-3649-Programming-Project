@@ -100,10 +100,6 @@ class InterferenceGraph:
         return True
 
     def print_graph(self):
-        """
-        Prints the 'Variable Interference Table' formatted exactly as required 
-        by the project requirements.
-        """
         print("\n--- Variable Interference Table ---")
         for var in sorted(self.adj_list.keys()):
             # Sort neighbors for consistent output
@@ -129,9 +125,7 @@ class InterferenceGraph:
 if __name__ == "__main__":
     from threeAddress import IntermediateCode, ThreeAddressInstruction
     
-    print("Testing InterferenceGraph")
-    
-    # Create the example from the Project Requirements (Page 4 & 7)
+    # Test case:
     # 1: a = a + 1
     # 2: t1 = a * 4
     # 3: t2 = t1 + 1
@@ -158,7 +152,6 @@ if __name__ == "__main__":
     graph = InterferenceGraph(analyzer)
     graph.print_graph()
     
-    print("3. Allocating registers...")
     num_regs = 4
     success = graph.allocate_registers(num_regs)
 
