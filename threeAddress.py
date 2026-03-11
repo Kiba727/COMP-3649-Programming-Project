@@ -1,6 +1,8 @@
 # threeAddress.py
 # Week 3 intermediate-code data structures + support routines
 
+from parserHelper import isValidVariable
+
 class ThreeAddressInstruction:
     """
     Represents a single three-address instruction.
@@ -38,11 +40,11 @@ class ThreeAddressInstruction:
         used = []
         
         # Check src1 
-        if self._is_variable(self.src1):
+        if isValidVariable(self.src1):
             used.append(self.src1)
         
         # Check src2 if applicable
-        if self.src2 is not None and self._is_variable(self.src2):
+        if self.src2 is not None and isValidVariable(self.src2):
             used.append(self.src2)
         
         return used
@@ -50,17 +52,6 @@ class ThreeAddressInstruction:
     def get_defined_variable(self):
         """Returns the variable defined by this instruction"""
         return self.dst
-    
-    def _is_variable(self, operand):
-        """Helper to check if an operand is a variable, not a literal"""
-        if isinstance(operand, str):
-            # Try to parse as integer literal
-            try:
-                int(operand)
-                return False
-            except ValueError:
-                return True
-        return False
     
     def __repr__(self):
         """String representation for debugging"""
@@ -131,10 +122,7 @@ class IntermediateCode:
         return self.__repr__()
 
 
-# Test code - runs when module is executed directly
 if __name__ == "__main__":
-    print("Testing ThreeAddressInstruction and IntermediateCode classes...")
-    print()
     
     # Test case 1: Binary operation
     instr1 = ThreeAddressInstruction("a", "a", "+", "1")
