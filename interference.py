@@ -1,5 +1,5 @@
 # interference.py
-# Week 4: Interference Graph Construction
+# Week 4 + 5: Interference Graph Construction
 
 import sys
 from liveness import LivenessAnalyzer

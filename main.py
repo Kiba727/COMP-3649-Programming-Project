@@ -1,5 +1,4 @@
 # main.py
-# Full compiler pipeline: parse -> liveness -> interference -> allocation -> codegen
 # Usage: python main.py <num_registers> <input_file>
 
 import sys
@@ -56,12 +55,12 @@ def main():
         print(f"  R{reg}: {', '.join(sorted(reg_to_vars[reg]))}")
     print("--------------------------------")
 
-    # Variables live on entry have a range starting at 0 (used before defined)
+    # Variables live on entry have a range starting at 0 
     live_on_entry = {
         var for var, ranges in analyzer.live_ranges.items()
         if any(r.start_line == 0 for r in ranges)
     }
-
+    
     target = generate_target_code(intermediate_code, graph.allocations, live_on_entry)
 
     print("\n=== Assembly Output ===")

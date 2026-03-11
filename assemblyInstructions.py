@@ -1,8 +1,5 @@
 # assemblyInstructions.py
-# Week 3 target-code data structures + support routines (no codegen yet)
-
 from enum import Enum
-
 
 class Opcode(Enum):
     ADD = "ADD"
@@ -24,7 +21,6 @@ class Operand:
         self.value = value
 
     def __repr__(self):
-        # Print in the exact assembly syntax required by the spec
         if self.type == OperandType.IMMEDIATE:
             return f"#{self.value}"
         if self.type == OperandType.REGISTER:
@@ -68,14 +64,10 @@ class TargetCode:
         return "\n".join([repr(i) for i in self.instructions])
 
     def write_to_file(self, filename):
-        """
-        Later (Week 6), you'll use this to write to <filename>.s.
-        For now it's safe to include as a support routine.
-        """
         with open(filename, "w") as f:
             f.write(repr(self) + "\n") 
             
-            
+
 if __name__ == "__main__":
     prog = TargetCode()
     prog.add(AssemblyInstruction(
