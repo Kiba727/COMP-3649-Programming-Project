@@ -3,8 +3,6 @@
 
 import sys
 import os
-from collections import defaultdict
-
 from parser import readIntermediateCode
 from liveness import LivenessAnalyzer
 from interference import InterferenceGraph
@@ -46,14 +44,17 @@ def main():
         sys.exit(0)
 
     # Build and print register colouring table (R0: a, b, d format)
-    reg_to_vars = defaultdict(list)
+    reg_to_vars = {}
     for var in graph.variables:
-        reg_to_vars[graph.allocations[var]].append(var)
+        reg = graph.allocations[var]
+        if reg not in reg_to_vars:
+            reg_to_vars[reg] = []
+        reg_to_vars[reg].append(var)
 
     print("\n--- Register Colouring Table ---")
     for reg in sorted(reg_to_vars.keys()):
         print(f"  R{reg}: {', '.join(sorted(reg_to_vars[reg]))}")
-    print("--------------------------------")
+        print("--------------------------------")
 
     # Variables live on entry have a range starting at 0 
     live_on_entry = {
