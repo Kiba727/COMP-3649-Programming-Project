@@ -31,14 +31,12 @@ class InterferenceGraph:
         and edges for interfering variables.
         """
         # 1. Initialize nodes for every variable found in the liveness analysis
-        # We sort them to ensure deterministic behavior (important for testing)
         self.variables = sorted(self.analyzer.live_ranges.keys())
         
         for var in self.variables:
             self.adj_list[var] = set()
 
         # 2. Check every pair of variables for interference
-        # We use a nested loop to compare every unique pair (A, B)
         for i in range(len(self.variables)):
             for j in range(i + 1, len(self.variables)):
                 var1 = self.variables[i]
@@ -63,7 +61,7 @@ class InterferenceGraph:
         return False
 
     def add_edge(self, u, v):
-        """Adds an undirected edge between u and v."""
+        """Adds an edge between u and v."""
         if u in self.adj_list and v in self.adj_list:
             self.adj_list[u].add(v)
             self.adj_list[v].add(u)
