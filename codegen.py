@@ -30,9 +30,6 @@ def make_operand(value, allocations):
 def generate_target_code(intermediate_code, allocations, live_on_entry):
     """
     Converts three-address instructions into assembly instructions.
-    Emits a prologue to load live-on-entry variables from memory,
-    translates each instruction, then emits an epilogue to store
-    live-on-exit variables back to memory.
     """
     target = TargetCode()
 
@@ -53,6 +50,7 @@ def generate_target_code(intermediate_code, allocations, live_on_entry):
         dst = Operand(OperandType.REGISTER, allocations[instr.dst])
 
         if instr.is_binary():
+            # dst = src1 op src2
             src1 = make_operand(instr.src1, allocations)
             src2 = make_operand(instr.src2, allocations)
             target.add(AssemblyInstruction(Opcode.MOV, src1, dst))
@@ -65,6 +63,7 @@ def generate_target_code(intermediate_code, allocations, live_on_entry):
             target.add(AssemblyInstruction(Opcode.SUB, src, dst))
 
         else:
+            # dst = src
             src = make_operand(instr.src1, allocations)
             target.add(AssemblyInstruction(Opcode.MOV, src, dst))
 

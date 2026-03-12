@@ -45,14 +45,14 @@ def readIntermediateCode(filename):
         instr = read3AddrInstruction(line, line_num)
         
         if instr is None:
-            return None  # Error already printed by read3AddrInstruction
+            return None 
             
         code.add_instruction(instr)
     
     # Parse the last line (live-on-exit variables)
     live_vars = parseLiveLine(lines[-1], len(lines))
     if live_vars is None:
-        return None  # Error already printed by parseLiveLine
+        return None  
     
     code.set_live_on_exit(live_vars)
     

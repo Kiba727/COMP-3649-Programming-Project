@@ -46,7 +46,7 @@ class LivenessAnalyzer:
         self.live_at_entry = set()
         
         # Dictionary to track the exact Start and End lines for every variable.
-        # Key: variable name (e.g., 'a'), Value: list of LiveRange objects (e.g., [a[1, 5), a[10, 12)])
+        # Key: variable name, Value: list of LiveRange objects (ex: [a[1, 5), a[10, 12)])
         self.live_ranges = {} 
         
         # Tracks variables that are created but never actually used.
@@ -130,7 +130,6 @@ class LivenessAnalyzer:
         self.live_ranges[var_name].append(new_range)
 
     def print_liveness(self):
-        """Prints the results in a clean, readable format for testing."""
         print("\n--- Liveness Analysis Results ---")
         
         print("Live Ranges [Start, End):")
@@ -150,33 +149,28 @@ class LivenessAnalyzer:
 if __name__ == "__main__":
     print("Testing LivenessAnalyzer")
     
-    # Test Case with a dead definition
-    # 1: a = 5
-    # 2: x = 100   
-    # 3: b = a + 1
-    # live: b
-    """"
-    code = IntermediateCode()
-    code.add_instruction(ThreeAddressInstruction("a", "5", None, None))
-    code.add_instruction(ThreeAddressInstruction("x", "100", None, None)) 
-    code.add_instruction(ThreeAddressInstruction("b", "a", "+", "1"))
-    code.set_live_on_exit(["b"])
-    """""
-    code = IntermediateCode()
-    code.add_instruction(ThreeAddressInstruction("a", "5", None, None))
-    code.add_instruction(ThreeAddressInstruction("x", "100", None, None)) 
-    code.add_instruction(ThreeAddressInstruction("b", "a", "+", "1"))
-    code.set_live_on_exit(["b"])
-    #code = IntermediateCode()
-    #code.add_instruction(ThreeAddressInstruction("a", "a", "+", "1"))
-    #code.add_instruction(ThreeAddressInstruction("t1", "a", "*", "4"))
-    #code.add_instruction(ThreeAddressInstruction("t2", "t1", "+", "1"))
-    #code.add_instruction(ThreeAddressInstruction("t3", "a", "*", "3"))
-    #code.add_instruction(ThreeAddressInstruction("a", "5"))
-    #code.add_instruction(ThreeAddressInstruction("b", "a", "+", "1"))
-    #code.add_instruction(ThreeAddressInstruction("c", "b", "*", "2"))
-    #code.set_live_on_exit(["c"])
+    print("--- Test Case 1: Dead Definition ---")
+    code1 = IntermediateCode()
+    code1.add_instruction(ThreeAddressInstruction("a", "5", None, None))
+    code1.add_instruction(ThreeAddressInstruction("x", "100", None, None)) # x is never used
+    code1.add_instruction(ThreeAddressInstruction("b", "a", "+", "1"))
+    code1.set_live_on_exit(["b"])
     
-    analyzer = LivenessAnalyzer(code)
-    analyzer.analyze()
-    analyzer.print_liveness()
+    analyzer1 = LivenessAnalyzer(code1)
+    analyzer1.analyze()
+    analyzer1.print_liveness()
+
+    print("--- Test Case 2: Full Program ---")
+    code2 = IntermediateCode()
+    code2.add_instruction(ThreeAddressInstruction("a", "a", "+", "1"))     # 1
+    code2.add_instruction(ThreeAddressInstruction("t1", "a", "*", "4"))    # 2
+    code2.add_instruction(ThreeAddressInstruction("t2", "t1", "+", "1"))   # 3
+    code2.add_instruction(ThreeAddressInstruction("t3", "a", "*", "3"))    # 4
+    code2.add_instruction(ThreeAddressInstruction("b", "t2", "-", "t3"))   # 5
+    code2.add_instruction(ThreeAddressInstruction("t4", "b", "/", "2"))    # 6
+    code2.add_instruction(ThreeAddressInstruction("d", "c", "+", "t4"))    # 7
+    code2.set_live_on_exit(["d"])
+    
+    analyzer2 = LivenessAnalyzer(code2)
+    analyzer2.analyze()
+    analyzer2.print_liveness()
