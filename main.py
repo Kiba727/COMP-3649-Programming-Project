@@ -10,6 +10,23 @@ from codegen import generate_target_code
 
 
 def main():
+    num_regs, input_file ,intermediate_code = handle_input()
+    
+    graph, analyzer = create_interference_table(intermediate_code, num_regs)
+
+    build_colouring_table(graph)
+
+    live_on_entry = build_live_on_entry(analyzer)
+
+    target = generate_target_code(intermediate_code, graph.allocations, live_on_entry)
+
+    print_target_code(target)
+
+    write_to_assembly_file(target, input_file)
+    sys.exit(0)
+
+
+def handle_input():
     if len(sys.argv) != 3:
         print("Usage: python main.py <num_registers> <input_file>", file=sys.stderr)
         sys.exit(1)
@@ -28,21 +45,25 @@ def main():
     if intermediate_code is None:
         sys.exit(1)
 
-    print("=== Three-Address Code ===")
-    print(intermediate_code)
+    return num_regs, input_file ,intermediate_code
 
-    analyzer = LivenessAnalyzer(intermediate_code)
-    analyzer.analyze()
-    analyzer.print_liveness()
-
+def create_interference_table(code, num_regs):
+    analyzer = LivenessAnalyzer(code)
     graph = InterferenceGraph(analyzer)
-    graph.print_graph()
 
     success = graph.allocate_registers(num_regs)
     if not success:
         print(f"Register allocation failed: {num_regs} register(s) are not sufficient to colour the interference graph.")
         sys.exit(0)
+    print_interference_table(graph)
 
+    return graph, analyzer
+
+def print_interference_table(graph):
+    graph.print_graph()
+    return 0
+
+def build_colouring_table(graph):
     # Build and print register colouring table (R0: a, b, d format)
     reg_to_vars = {}
     for var in graph.variables:
@@ -50,30 +71,35 @@ def main():
         if reg not in reg_to_vars:
             reg_to_vars[reg] = []
         reg_to_vars[reg].append(var)
+        
+    print_colouring_table(reg_to_vars)
+    return 0
 
+def print_colouring_table(reg_to_vars):
     print("\n--- Register Colouring Table ---")
     for reg in sorted(reg_to_vars.keys()):
         print(f"  R{reg}: {', '.join(sorted(reg_to_vars[reg]))}")
         print("--------------------------------")
+    return 0
 
-    # Variables live on entry have a range starting at 0 
+def build_live_on_entry(analyzer):
     live_on_entry = {
         var for var, ranges in analyzer.live_ranges.items()
         if any(r.start_line == 0 for r in ranges)
     }
-    
-    target = generate_target_code(intermediate_code, graph.allocations, live_on_entry)
+    return live_on_entry
 
-    print("\n=== Assembly Output ===")
-    print(target)
-
+def write_to_assembly_file(target, input_file):
     base, _ = os.path.splitext(input_file)
     output_file = base + ".s"
     target.write_to_file(output_file)
     print(f"\nAssembly written to: {output_file}")
+    return 0
 
-    sys.exit(0)
-
+def print_target_code(target):
+    print(f"\n-----Assembly-Instructions------")
+    print(target)
+    return 0
 
 if __name__ == "__main__":
     main()
