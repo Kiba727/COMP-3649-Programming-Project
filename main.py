@@ -27,6 +27,12 @@ def main():
 
 
 def handle_input():
+
+    #check that both arguments are provided and valid
+    if len(sys.argv) < 2:
+        print("Error: Both arguments must be provided.", file=sys.stderr)
+        sys.exit(1)
+
     if len(sys.argv) != 3:
         print("Usage: python main.py <num_registers> <input_file>", file=sys.stderr)
         sys.exit(1)
@@ -34,12 +40,16 @@ def handle_input():
     try:
         num_regs = int(sys.argv[1])
         if num_regs < 1:
+            print("Error: Argument one must be an integer greater than zero.", file=sys.stderr)
             raise ValueError
     except ValueError:
-        print("Error: <num_registers> must be a positive integer.", file=sys.stderr)
+        print("Error: Argument one must be an integer.", file=sys.stderr)
         sys.exit(1)
 
     input_file = sys.argv[2]
+    if not os.path.isfile(input_file):
+        print(f"Error: File '{input_file}' is not a readable file.", file=sys.stderr)
+        sys.exit(1)
 
     intermediate_code = readIntermediateCode(input_file)
     if intermediate_code is None:
