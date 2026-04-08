@@ -54,7 +54,7 @@ def _load_live_on_entry(target, live_on_entry, allocations):
             ))
 
 def _translate_instruction(target, instr, allocations):
-    """Translates a single TAC instruction into one or more assembly instructions."""
+    """Translates a single Three Address Code Instruction into one or more assembly instructions."""
     # Skip dead definitions (Requirement: no register allocated)
     if instr.dst not in allocations:
         return
