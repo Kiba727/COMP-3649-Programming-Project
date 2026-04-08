@@ -5,144 +5,100 @@ import sys
 from threeAddress import ThreeAddressInstruction, IntermediateCode
 from parserHelper import parseLiveLine, isValidVariable, isValidOperand
 
-
 def readIntermediateCode(filename):
-    """
-    Reads and parses input file. 
-    
-    Args:
-        filename: path to file
-        
-    Returns:
-        IntermediateCode object 
-    """
+    """Reads and parses input file into an IntermediateCode object."""
     try:
         with open(filename, 'r') as file:
             lines = file.readlines()
-    except FileNotFoundError:
-        print(f"Error: File '{filename}' not found", file=sys.stderr)
-        return None
-    except IOError as e:
-        print(f"Error: Could not read file '{filename}': {e}", file=sys.stderr)
+    except (FileNotFoundError, IOError) as e:
+        print(f"Error reading file '{filename}': {e}", file=sys.stderr)
         return None
     
-    if len(lines) == 0:
+    if not lines:
         print("Error: Input file is empty", file=sys.stderr)
         return None
     
-    # Create intermediate code container
     code = IntermediateCode()
-    
-    # Calculate the index of the last line so we know where to stop
-    # We want to process everything up to the last line, but not the last line itself.
     last_line_index = len(lines) - 1
 
-    # Loop from 0 up to but not including the last_line_index
+    # Process all but the last line (instructions)
     for i in range(last_line_index):
-        line = lines[i]       # Get the line at the current index
-        line_num = i + 1      # Calculate the human-readable line number (starts at 1)
-
-        instr = read3AddrInstruction(line, line_num)
-        
+        instr = read3AddrInstruction(lines[i], i + 1)
         if instr is None:
             return None 
-            
         code.add_instruction(instr)
     
-    # Parse the last line (live-on-exit variables)
+    # Process the last line (live-on-exit)
     live_vars = parseLiveLine(lines[-1], len(lines))
     if live_vars is None:
         return None  
     
     code.set_live_on_exit(live_vars)
-    
     return code
 
-
 def read3AddrInstruction(line, line_num):
-    """
-    Parses a single line of three-address code.
-    
-    Args:
-        line: string containing one instruction
-        line_num: line number for error messages
-        
-    Returns:
-        ThreeAddressInstruction object on success, None on error
-    """
-    # Remove white space
+    """Main router for parsing a single line of TAC."""
     line = line.strip()
-    
-    # Skip empty lines
     if not line:
         print(f"Error on line {line_num}: Empty line", file=sys.stderr)
         return None
     
-    # Tokenizes line
     tokens = line.split()
-    
-    #check for invalid line
-    if len(tokens) < 3:
-        print(f"Error on line {line_num}: Less than 3 tokens on line", file=sys.stderr)
+    if not (3 <= len(tokens) <= 5):
+        print(f"Error on line {line_num}: Invalid token count", file=sys.stderr)
         return None
     
-    if len(tokens) > 5:
-        print(f"Error on line {line_num}: More than 5 tokens on line", file=sys.stderr)
+    # Validate destination and equals sign
+    if not isValidVariable(tokens[0]):
+        print(f"Error on line {line_num}: Invalid destination '{tokens[0]}'", file=sys.stderr)
         return None
-    
-    # Extract destination
-    dst = tokens[0]
-
-    if not isValidVariable(dst):
-        print(f"Error on line {line_num}: Invalid destination variable '{dst}'", file=sys.stderr)
-        return None
-    
-    # Check for equals sign
     if tokens[1] != '=':
         print(f"Error on line {line_num}: Missing '=' sign", file=sys.stderr)
         return None
+
+    return _parse_by_token_count(tokens, line_num)
+
+def _parse_by_token_count(tokens, line_num):
+    """Helper to delegate parsing based on the number of tokens."""
+    dst = tokens[0]
     
-    # Parse based on number of remaining tokens for 3 cases
-    # Case 1: Simple assignment -> dst = src
     if len(tokens) == 3:
-        src = tokens[2]
-        if not isValidOperand(src):
-            print(f"Error on line {line_num}: Invalid operand '{src}'", file=sys.stderr)
-            return None
-        return ThreeAddressInstruction(dst, src, None, None)
+        # Case 1: dst = src
+        return _create_assignment(dst, tokens[2], line_num)
     
-    # Case 2: Unary negation -> dst = -src
     elif len(tokens) == 4:
-        if tokens[2] != '-':
-            print(f"Error on line {line_num}: Missing '-' negation sign", file=sys.stderr)
-            return None
-        src = tokens[3]
-        if not isValidOperand(src):
-            print(f"Error on line {line_num}: Invalid operand '{src}'", file=sys.stderr)
-            return None
-        return ThreeAddressInstruction(dst, src, '-', None)
+        # Case 2: dst = -src
+        return _create_unary(dst, tokens[2], tokens[3], line_num)
     
-    # Case 3: Binary operation -> dst = src1 op src2
     elif len(tokens) == 5:
-        src1 = tokens[2]
-        op = tokens[3]
-        src2 = tokens[4]
-        
-        if not isValidOperand(src1):
-            print(f"Error on line {line_num}: Invalid operand '{src1}'", file=sys.stderr)
-            return None
-        
-        if op not in ['+', '-', '*', '/']:
-            print(f"Error on line {line_num}: Invalid operator '{op}' (expected +, -, *, or /)", file=sys.stderr)
-            return None
-        
-        if not isValidOperand(src2):
-            print(f"Error on line {line_num}: Invalid operand '{src2}'", file=sys.stderr)
-            return None
-        
-        return ThreeAddressInstruction(dst, src1, op, src2)
+        # Case 3: dst = src1 op src2
+        return _create_binary(dst, tokens[2], tokens[3], tokens[4], line_num)
     
     return None
+
+def _create_assignment(dst, src, line_num):
+    if not isValidOperand(src):
+        print(f"Error on line {line_num}: Invalid operand '{src}'", file=sys.stderr)
+        return None
+    return ThreeAddressInstruction(dst, src, None, None)
+
+def _create_unary(dst, op, src, line_num):
+    if op != '-':
+        print(f"Error on line {line_num}: Expected '-' negation", file=sys.stderr)
+        return None
+    if not isValidOperand(src):
+        print(f"Error on line {line_num}: Invalid operand '{src}'", file=sys.stderr)
+        return None
+    return ThreeAddressInstruction(dst, src, '-', None)
+
+def _create_binary(dst, src1, op, src2, line_num):
+    if not isValidOperand(src1) or not isValidOperand(src2):
+        print(f"Error on line {line_num}: Invalid operand(s)", file=sys.stderr)
+        return None
+    if op not in ['+', '-', '*', '/']:
+        print(f"Error on line {line_num}: Invalid operator '{op}'", file=sys.stderr)
+        return None
+    return ThreeAddressInstruction(dst, src1, op, src2)
 
 
 # Test cases for parser module

@@ -16,7 +16,6 @@ _OP_MAP = {
     "/": Opcode.DIV,
 }
 
-
 def make_operand(value, allocations):
     """Converts a variable name or integer literal into an Operand."""
     try:
@@ -26,14 +25,26 @@ def make_operand(value, allocations):
         pass
     return Operand(OperandType.REGISTER, allocations[value])
 
-
 def generate_target_code(intermediate_code, allocations, live_on_entry):
     """
-    Converts three-address instructions into assembly instructions.
+    Main router for converting intermediate code into assembly instructions.
     """
     target = TargetCode()
 
-    # load live-on-entry variables from memory
+    # 1. Handle entry: load variables from memory 
+    _load_live_on_entry(target, live_on_entry, allocations)
+
+    # 2. Translate each instruction
+    for instr in intermediate_code.instructions:
+        _translate_instruction(target, instr, allocations)
+
+    # 3. Handle exit: store live variables to memory 
+    _store_live_on_exit(target, intermediate_code.live_on_exit, allocations)
+
+    return target
+
+def _load_live_on_entry(target, live_on_entry, allocations):
+    """Emits MOV instructions for variables live upon block entry."""
     for var in sorted(live_on_entry):
         if var in allocations:
             target.add(AssemblyInstruction(
@@ -42,38 +53,38 @@ def generate_target_code(intermediate_code, allocations, live_on_entry):
                 Operand(OperandType.REGISTER, allocations[var])
             ))
 
-    for instr in intermediate_code.instructions:
-        # Skip dead definitions (no register allocated)
-        if instr.dst not in allocations:
-            continue
+def _translate_instruction(target, instr, allocations):
+    """Translates a single TAC instruction into one or more assembly instructions."""
+    # Skip dead definitions (Requirement: no register allocated)
+    if instr.dst not in allocations:
+        return
 
-        dst = Operand(OperandType.REGISTER, allocations[instr.dst])
+    dst_reg = Operand(OperandType.REGISTER, allocations[instr.dst])
 
-        if instr.is_binary():
-            # dst = src1 op src2
-            src1 = make_operand(instr.src1, allocations)
-            src2 = make_operand(instr.src2, allocations)
-            target.add(AssemblyInstruction(Opcode.MOV, src1, dst))
-            target.add(AssemblyInstruction(_OP_MAP[instr.op], src2, dst))
+    if instr.is_binary():
+        # dst = src1 op src2
+        src1 = make_operand(instr.src1, allocations)
+        src2 = make_operand(instr.src2, allocations)
+        target.add(AssemblyInstruction(Opcode.MOV, src1, dst_reg))
+        target.add(AssemblyInstruction(_OP_MAP[instr.op], src2, dst_reg))
 
-        elif instr.is_unary_negation():
-            # dst = 0 - src => -src
-            src = make_operand(instr.src1, allocations)
-            target.add(AssemblyInstruction(Opcode.MOV, Operand(OperandType.IMMEDIATE, "0"), dst))
-            target.add(AssemblyInstruction(Opcode.SUB, src, dst))
+    elif instr.is_unary_negation():
+        # dst = 0 - src => -src
+        src = make_operand(instr.src1, allocations)
+        target.add(AssemblyInstruction(Opcode.MOV, Operand(OperandType.IMMEDIATE, "0"), dst_reg))
+        target.add(AssemblyInstruction(Opcode.SUB, src, dst_reg))
 
-        else:
-            # dst = src
-            src = make_operand(instr.src1, allocations)
-            target.add(AssemblyInstruction(Opcode.MOV, src, dst))
+    else:
+        # dst = src (simple assignment)
+        src = make_operand(instr.src1, allocations)
+        target.add(AssemblyInstruction(Opcode.MOV, src, dst_reg))
 
-    # store live-on-exit variables back to memory
-    for var in sorted(intermediate_code.live_on_exit):
+def _store_live_on_exit(target, live_on_exit, allocations):
+    """Emits MOV instructions to store live-on-exit variables back to memory."""
+    for var in sorted(live_on_exit):
         if var in allocations:
             target.add(AssemblyInstruction(
                 Opcode.MOV,
                 Operand(OperandType.REGISTER, allocations[var]),
                 Operand(OperandType.VARIABLE, var)
             ))
-
-    return target
