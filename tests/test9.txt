@@ -1,0 +1,3 @@
+a = x + y
+b = a * 2
+live: b

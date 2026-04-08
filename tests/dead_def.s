@@ -1,0 +1,4 @@
+MOV #5,R0
+MOV R0,R1
+ADD #1,R1
+MOV R1,c
