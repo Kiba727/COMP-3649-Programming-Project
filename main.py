@@ -1,6 +1,4 @@
 # main.py
-# Usage: python main.py <num_registers> <input_file>
-
 import sys
 import os
 from parser import readIntermediateCode
@@ -8,9 +6,13 @@ from liveness import LivenessAnalyzer
 from interference import InterferenceGraph
 from codegen import generate_target_code
 
-
 def main():
-    num_regs, input_file ,intermediate_code = handle_input()
+    num_regs, input_file, intermediate_code = handle_input()
+    
+    is_valid, error_msg = intermediate_code.validate_live_on_exit()
+    if not is_valid:
+        print(f"Error: {error_msg}", file=sys.stderr)
+        sys.exit(1)
     
     graph, analyzer = create_interference_table(intermediate_code, num_regs)
 
@@ -25,14 +27,7 @@ def main():
     write_to_assembly_file(target, input_file)
     sys.exit(0)
 
-
 def handle_input():
-
-    #check that both arguments are provided and valid
-    if len(sys.argv) < 2:
-        print("Error: Both arguments must be provided.", file=sys.stderr)
-        sys.exit(1)
-
     if len(sys.argv) != 3:
         print("Usage: python main.py <num_registers> <input_file>", file=sys.stderr)
         sys.exit(1)
@@ -41,7 +36,7 @@ def handle_input():
         num_regs = int(sys.argv[1])
         if num_regs < 1:
             print("Error: Argument one must be an integer greater than zero.", file=sys.stderr)
-            raise ValueError
+            sys.exit(1)
     except ValueError:
         print("Error: Argument one must be an integer.", file=sys.stderr)
         sys.exit(1)
@@ -55,18 +50,21 @@ def handle_input():
     if intermediate_code is None:
         sys.exit(1)
 
-    return num_regs, input_file ,intermediate_code
+    return num_regs, input_file, intermediate_code
 
 def create_interference_table(code, num_regs):
     analyzer = LivenessAnalyzer(code)
+    
+    analyzer.analyze()
+    
     graph = InterferenceGraph(analyzer)
 
     success = graph.allocate_registers(num_regs)
     if not success:
         print(f"Register allocation failed: {num_regs} register(s) are not sufficient to colour the interference graph.")
-        sys.exit(0)
+        sys.exit(1) 
+        
     print_interference_table(graph)
-
     return graph, analyzer
 
 def print_interference_table(graph):
@@ -74,7 +72,6 @@ def print_interference_table(graph):
     return 0
 
 def build_colouring_table(graph):
-    # Build and print register colouring table (R0: a, b, d format)
     reg_to_vars = {}
     for var in graph.variables:
         reg = graph.allocations[var]
@@ -89,10 +86,11 @@ def print_colouring_table(reg_to_vars):
     print("\n--- Register Colouring Table ---")
     for reg in sorted(reg_to_vars.keys()):
         print(f"  R{reg}: {', '.join(sorted(reg_to_vars[reg]))}")
-        print("--------------------------------")
+    print("--------------------------------")
     return 0
 
 def build_live_on_entry(analyzer):
+    # Variables that are live at line 0 were never defined in this block
     live_on_entry = {
         var for var, ranges in analyzer.live_ranges.items()
         if any(r.start_line == 0 for r in ranges)

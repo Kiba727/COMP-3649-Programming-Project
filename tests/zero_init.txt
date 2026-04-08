@@ -1,0 +1,5 @@
+a = 5
+b = -a
+c = -b
+d = -c
+live: d

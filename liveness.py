@@ -31,103 +31,78 @@ class LiveRange:
     def __str__(self):
         return self.__repr__()
 
-
 class LivenessAnalyzer:
-    """
-    Scans through our code to figure out exactly when variables are used and are no longer used.
-    """
     def __init__(self, code):
         self.code = code
-        
-        # Stores the set of alive variables for each line of code. This is what we will return at the end.
         self.liveness_results = []
-        
-        # Variables used before line 1 in the input file
         self.live_at_entry = set()
-        
-        # Dictionary to track the exact Start and End lines for every variable.
-        # Key: variable name, Value: list of LiveRange objects (ex: [a[1, 5), a[10, 12)])
         self.live_ranges = {} 
-        
-        # Tracks variables that are created but never actually used.
         self.dead_definitions = []
 
     def analyze(self):
         """
-        Runs the backward scan to determine the live ranges as used variables will always exist before their definitions.
-        If a variable is used, but we haven't seen its definition yet, we know it must be alive at the start of the program. 
-        If a variable is defined, but we never see it being used, then it is a dead definition and can be removed from the code.
+        Coordinates the backward scan to determine live ranges.
         """
-        num_instructions = len(self.code.instructions)
-        
-        # A dictionary to remember the exact line where a variable is last used.
-        var_range_ends = {} 
-        
-        # Start reading backwards from the bottom of the file.
-        # Grab the variables from the "live:" line at the bottom of the file.
+        num_instr = len(self.code.instructions)
+        var_range_ends = {var: num_instr + 1 for var in self.code.live_on_exit}
         current_live_vars = set(self.code.live_on_exit)
-        
-        for var in self.code.live_on_exit:
-            var_range_ends[var] = num_instructions + 1
-            
-        # Holds the liveness variables for each line.
-        results = [None] * num_instructions
+        results = [None] * num_instr
 
-        # Loop backwards from the bottom line to the top
-        for i in range(num_instructions - 1, -1, -1):
-            line_num = i + 1  # 1-indexed
-            
-            # Save the current list of alive variables for this specific line
+        # Backward loop
+        for i in range(num_instr - 1, -1, -1):
+            line_num = i + 1
             results[i] = current_live_vars.copy()
-
             instr = self.code.instructions[i]
-            
-            # Left side of the equals sign where a variable is defined
-            defined_var = instr.get_defined_variable()
-            
-            # If the defined variable is currently live, mark the start of its live range here.
-            if defined_var in current_live_vars:
-                start = line_num
-                end = var_range_ends[defined_var]
-                self._add_live_range(defined_var, start, end)
-                
-                # Variable is dead before its definition, so remove it from the current live set.
-                current_live_vars.remove(defined_var)
-                del var_range_ends[defined_var]
 
-            # If the variable defined on this line is not currently used, it means it is a dead definition. 
-            elif defined_var is not None:
-                self.dead_definitions.append((line_num, defined_var))
-                
-            # Any variables used on the right side of the equals sign must be alive.
-            used_vars = instr.get_used_variables()
-            
-            for var in used_vars:
-                # When scanning backwards, the first time we see a variable used is its actual "last use".
-                # This line marks the end of its lifespan.
-                if var not in current_live_vars:
-                    current_live_vars.add(var)
-                    var_range_ends[var] = line_num + 1  # +1: end is exclusive, include last-use line
+            # Process definition and uses separately
+            self._process_instruction_def(instr, line_num, current_live_vars, var_range_ends)
+            self._process_instruction_uses(instr, line_num, current_live_vars, var_range_ends)
         
-        # Handle variables that are live at the start of the program used but never defined.
-        for var in current_live_vars:
-            start = 0 
-            end = var_range_ends[var]
-            self._add_live_range(var, start, end)
-            
-        # Save our final results
-        self.live_at_entry = current_live_vars
-        self.liveness_results = results
-
+        self._finalize_analysis(current_live_vars, var_range_ends, results)
         return results
 
+    def _process_instruction_def(self, instr, line_num, current_live, range_ends):
+        """
+        Handles the variable being defined (left side of the equals).
+        """
+        defined_var = instr.get_defined_variable()
+        if not defined_var:
+            return
+
+        if defined_var in current_live:
+            # Mark start of live range, the variable is dead before this line
+            self._add_live_range(defined_var, line_num, range_ends[defined_var])
+            current_live.remove(defined_var)
+            del range_ends[defined_var]
+        else:
+            # Variable defined but not currently live is a dead definition
+            self.dead_definitions.append((line_num, defined_var))
+
+    def _process_instruction_uses(self, instr, line_num, current_live, range_ends):
+        """
+        Handles variables being used on the right side of the equals sign.
+        """
+        for var in instr.get_used_variables():
+            if var not in current_live:
+                # First time seeing a var used (scanning backward) is its 'end' line
+                current_live.add(var)
+                range_ends[var] = line_num + 1
+
+    def _finalize_analysis(self, current_live, range_ends, results):
+        """
+        Handles variables live at entry and saves final results.
+        """
+        for var in current_live:
+            self._add_live_range(var, 0, range_ends[var])
+            
+        self.live_at_entry = current_live
+        self.liveness_results = results
+
     def _add_live_range(self, var_name, start, end):
-        """Helper to create a LiveRange object and add it to our dictionary."""
+        """Helper to create and store a LiveRange object."""
         if var_name not in self.live_ranges:
             self.live_ranges[var_name] = []
-        
-        new_range = LiveRange(var_name, start, end)
-        self.live_ranges[var_name].append(new_range)
+        self.live_ranges[var_name].append(LiveRange(var_name, start, end))
 
     def print_liveness(self):
         print("\n--- Liveness Analysis Results ---")
