@@ -42,7 +42,9 @@ readIntermediateCode filename = do
     contents <- readFile filenameCDialect
     let allLines = line contents
     if null allLines
-        then putStrLn("Error: File does not exist")
+        then do
+            putStrLn("Error: File does not exist")
+            return Nothing
         else do
             let bodyLines = init allLines
             let liveLines = last allLines
@@ -50,6 +52,8 @@ readIntermediateCode filename = do
             let parsedLines = zipWith read3AddrInstruction bodyLines[1..]
 
             case sequence parsedLines of
-                Nothing -> putStrLn("Error: Invalid file format")
+                Nothing -> do
+                    putStrLn("Error: Invalid file format")
+                    return Nothing
                 Just instrs ->
                     return (Just (IntermediateCode instrs) (parseLiveLine liveLine))
