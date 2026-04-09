@@ -51,5 +51,5 @@ readIntermediateCode filename = do
 
             case sequence parsedLines of
                 Nothing -> putStrLn("Error: Invalid file format")
-                just instrs ->
+                Just instrs ->
                     return (Just (IntermediateCode instrs) (parseLiveLine liveLine))
