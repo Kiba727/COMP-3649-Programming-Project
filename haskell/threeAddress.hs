@@ -1,4 +1,5 @@
-import Control.Monad.Accum (MonadAccum(add))
+module ThreeAddress where
+
 data ThreeAddressInstruction = ThreeAddressInstruction
     { dst :: String
     , src1 :: String
