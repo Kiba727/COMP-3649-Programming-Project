@@ -1,3 +1,4 @@
+import Control.Monad.Accum (MonadAccum(add))
 data ThreeAddressInstruction = ThreeAddressInstruction
     { dst :: String
     , src1 :: String
@@ -27,12 +28,14 @@ isAssignment instr = case op instr of
         _       -> False
     _ -> False
 
-
-
-getUsedVariables :: ThreeAddressInstruction -> [String]
-getUsedVariables instr = case is
-
 data IntermediateCode = IntermediateCode
     { instruction :: [ThreeAddressInstruction]
     , liveOnExit :: [String]
     }
+
+addInstruction :: IntermediateCode -> ThreeAddressInstruction -> IntermediateCode
+addInstruction code instr = code { instruction = instruction code ++ [instr] }
+
+setLiveOnExit :: IntermediateCode -> [String] -> IntermediateCode
+setLiveOnExit code liveVars = code { liveOnExit = liveVars }
+
