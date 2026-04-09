@@ -106,7 +106,7 @@ class InterferenceGraph:
             print(f"{var}: {neighbor_str}")
         print("-----------------------------------")
     
-    def print_allocatons(self):
+    def print_allocations(self):
         if not self.allocations:
             print("No allocations found")
         else:
@@ -155,6 +155,6 @@ if __name__ == "__main__":
 
     if success:
         print("Successfully coloured graph")
-        graph.print_allocatons()
+        graph.print_allocations()
     else:
         print(f"Failed to colour graph with {num_regs} registers")
