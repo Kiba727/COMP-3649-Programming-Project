@@ -112,7 +112,7 @@ class InterferenceGraph:
         else:
             print("\n--- Register Allocations ---")
             for var in self.variables:
-                print(f" {var} -> Regsiter{self.allocations[var]}")
+                print(f" {var} -> Register{self.allocations[var]}")
             print("-----------------------------------")
         
     def __repr__(self):

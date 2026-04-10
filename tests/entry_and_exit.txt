@@ -1,0 +1,4 @@
+a = x + y
+b = z + a
+c = a + b
+live: b, c
