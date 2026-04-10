@@ -77,6 +77,14 @@ def _parse_by_token_count(tokens, line_num):
     return None
 
 def _create_assignment(dst, src, line_num):
+    # Check for compact unary negation: dst = -src
+    if src.startswith('-') and len(src) > 1:
+        operand = src[1:]
+        if not isValidOperand(operand):
+            print(f"Error on line {line_num}: Invalid operand '{operand}'", file=sys.stderr)
+            return None
+        return ThreeAddressInstruction(dst, operand, '-', None)
+    
     if not isValidOperand(src):
         print(f"Error on line {line_num}: Invalid operand '{src}'", file=sys.stderr)
         return None
