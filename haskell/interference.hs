@@ -1,4 +1,11 @@
-module Interference where
+module Interference 
+    ( InterferenceGraph -- Type exported, constructor hidden
+    , AdjList
+    , Allocations
+    , buildAdjList
+    , colouringSolver
+    , getUniqueVars
+    ) where
 
 import Data.List (nub)
 import Liveness
@@ -41,14 +48,13 @@ safeColour var reg graph allocs =
         Just neighbors ->
             not (any (\nb -> lookup nb allocs == Just reg) neighbors) 
 
-colouringSolver :: AdjList -> [String] -> Int -> Allocations -> Maybe Allocations 
-colouringSolver _ [] _ allocations = Just allocations
+-- Refactored to return a list of all solutions using declarative list comprehensions
+colouringSolver :: AdjList -> [String] -> Int -> Allocations -> [Allocations]
+colouringSolver _ [] _ allocations = [allocations]
 colouringSolver graph (v:vs) numRegs allocs =
-    let tryColour [] = Nothing
-        tryColour (c:cs) = 
-            if safeColour v c graph allocs
-                then case colouringSolver graph vs numRegs ((v,c) : allocs) of
-                    Just final -> Just final
-                    Nothing -> tryColour cs
-                else tryColour cs
-    in tryColour [0 .. numRegs - 1]
+    [ finalSolution 
+    | c <- [0 .. numRegs - 1]
+    , safeColour v c graph allocs
+    , let newAllocs = (v, c) : allocs
+    , finalSolution <- colouringSolver graph vs numRegs newAllocs
+    ]

@@ -3,35 +3,29 @@ module InterferenceTest where
 import ThreeAddress
 import Liveness
 import Interference
-import qualified Data.Map as Map
 
 runInterferenceTest :: IO ()
 runInterferenceTest = do
-    let code = IntermediateCode 
-            { instruction = 
-                [ ThreeAddressInstruction "a" "a" (Just "+") (Just "1")
-                , ThreeAddressInstruction "t1" "a" (Just "*") (Just "4")
-                , ThreeAddressInstruction "t2" "t1" (Just "+") (Just "1")
-                , ThreeAddressInstruction "t3" "a" (Just "*") (Just "3")
-                , ThreeAddressInstruction "b" "t2" (Just "-") (Just "t3")
-                , ThreeAddressInstruction "t4" "b" (Just "/") (Just "2")
-                , ThreeAddressInstruction "d" "c" (Just "+") (Just "t4")
-                ]
-            , liveOnExit = ["d"]
-            }
+    let code = makeIntermediateCode 
+            [ makeInstruction "a" "a" (Just "+") (Just "1")
+            , makeInstruction "t1" "a" (Just "*") (Just "4")
+            , makeInstruction "t2" "t1" (Just "+") (Just "1")
+            , makeInstruction "t3" "a" (Just "*") (Just "3")
+            , makeInstruction "b" "t2" (Just "-") (Just "t3")
+            , makeInstruction "t4" "b" (Just "/") (Just "2")
+            , makeInstruction "d" "c" (Just "+") (Just "t4")
+            ] ["d"]
 
-    -- run analyzer
     let ranges = analyze code 
-
-    -- build adjacent list
     let graph = buildAdjList ranges
-
-    -- get list of unique variables for solver
     let vars = getUniqueVars ranges
     
-    -- 4. Solve
+    -- Solve (Now returns a list of all solutions)
     let result = colouringSolver graph vars 4 []
 
     case result of
-        Nothing -> putStrLn "Allocation failed."
-        Just allocs -> print allocs
+        [] -> putStrLn "Allocation failed (No solutions found)."
+        (firstSolution:_) -> do
+            putStrLn "Success! Here is the first valid allocation:"
+            print firstSolution
+            putStrLn $ "Total number of valid allocations found: " ++ show (length result)
