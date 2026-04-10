@@ -64,3 +64,4 @@ readIntermediateCode filename = do
             
             -- Build and return the final object directly
             return (Just (IntermediateCode instrs liveVars))
+
