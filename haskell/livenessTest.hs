@@ -18,3 +18,4 @@ testCase2 = IntermediateCode
     , ThreeAddressInstruction "t2" "t1" (Just "+") (Just "1") -- Line 3
     , ThreeAddressInstruction "b" "t2" (Just "-") (Just "a")  -- Line 4
     ] ["b"]
+
