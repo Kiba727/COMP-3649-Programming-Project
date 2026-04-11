@@ -1,0 +1,8 @@
+a = 1
+b = 2
+c = a + b
+t1 = c * 2
+t2 = t1 - a
+t3 = t2 / b
+d = t3 + 1
+live: d
