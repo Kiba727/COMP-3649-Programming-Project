@@ -1,7 +1,7 @@
 # main.py
 import sys
 import os
-from parser import readIntermediateCode
+from parser import read_intermediate_code
 from liveness import LivenessAnalyzer
 from interference import InterferenceGraph
 from codegen import generate_target_code
@@ -46,7 +46,7 @@ def handle_input():
         print(f"Error: File '{input_file}' is not a readable file.", file=sys.stderr)
         sys.exit(1)
 
-    intermediate_code = readIntermediateCode(input_file)
+    intermediate_code = read_intermediate_code(input_file)
     if intermediate_code is None:
         sys.exit(1)
 

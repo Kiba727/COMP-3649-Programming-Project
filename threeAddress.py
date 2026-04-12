@@ -1,7 +1,7 @@
 # threeAddress.py
 # Week 3 intermediate-code data structures + support routines
 
-from parserHelper import isValidVariable
+from parserHelper import is_valid_variable
 
 class ThreeAddressInstruction:
     """
@@ -40,11 +40,11 @@ class ThreeAddressInstruction:
         used = []
         
         # Check src1 
-        if isValidVariable(self.src1):
+        if is_valid_variable(self.src1):
             used.append(self.src1)
         
         # Check src2 if applicable
-        if self.src2 is not None and isValidVariable(self.src2):
+        if self.src2 is not None and is_valid_variable(self.src2):
             used.append(self.src2)
         
         return used
