@@ -7,6 +7,7 @@ from interference import InterferenceGraph
 from codegen import generate_target_code
 
 def main():
+    """Runs the full compiler pipeline from input validation to assembly output."""
     num_regs, input_file, intermediate_code = handle_input()
     
     is_valid, error_msg = intermediate_code.validate_live_on_exit()
@@ -27,7 +28,8 @@ def main():
     write_to_assembly_file(target, input_file)
     sys.exit(0)
 
-def handle_input():
+def handle_input(): 
+    """Validates and parses command-line arguments, returning the register count, input filename, and parsed intermediate code."""
     if len(sys.argv) != 3:
         print("Usage: python main.py <num_registers> <input_file>", file=sys.stderr)
         sys.exit(1)
@@ -52,7 +54,8 @@ def handle_input():
 
     return num_regs, input_file, intermediate_code
 
-def create_interference_table(code, num_regs):
+def create_interference_table(code, num_regs): 
+    """Runs liveness analysis, builds the interference graph, and attempts register allocation."""
     analyzer = LivenessAnalyzer(code)
     
     analyzer.analyze()
@@ -63,15 +66,18 @@ def create_interference_table(code, num_regs):
     if not success:
         print(f"Register allocation failed: {num_regs} register(s) are not sufficient to colour the interference graph.")
         sys.exit(1) 
-        
-    print_interference_table(graph)
+
+    print_interference_table(graph) 
+
     return graph, analyzer
 
-def print_interference_table(graph):
+def print_interference_table(graph): 
+    """Prints the variable interference table to stdout."""
     graph.print_graph()
     return 0
 
-def build_colouring_table(graph):
+def build_colouring_table(graph): 
+    """Groups variables by their assigned register and prints the colouring table."""
     reg_to_vars = {}
     for var in graph.variables:
         reg = graph.allocations[var]
@@ -82,29 +88,32 @@ def build_colouring_table(graph):
     print_colouring_table(reg_to_vars)
     return 0
 
-def print_colouring_table(reg_to_vars):
+def print_colouring_table(reg_to_vars): 
+    """Prints the register colouring table to stdout."""
     print("\n--- Register Colouring Table ---")
     for reg in sorted(reg_to_vars.keys()):
         print(f"  R{reg}: {', '.join(sorted(reg_to_vars[reg]))}")
     print("--------------------------------")
     return 0
 
-def build_live_on_entry(analyzer):
-    # Variables that are live at line 0 were never defined in this block
+def build_live_on_entry(analyzer): 
+    """Returns the set of variables live at line 0, meaning they were used before being defined in this block."""
     live_on_entry = {
         var for var, ranges in analyzer.live_ranges.items()
         if any(r.start_line == 0 for r in ranges)
     }
     return live_on_entry
 
-def write_to_assembly_file(target, input_file):
+def write_to_assembly_file(target, input_file): 
+    """Writes the generated assembly instructions to a .s file derived from the input filename."""
     base, _ = os.path.splitext(input_file)
     output_file = base + ".s"
     target.write_to_file(output_file)
     print(f"\nAssembly written to: {output_file}")
     return 0
 
-def print_target_code(target):
+def print_target_code(target): 
+    """Prints the generated assembly instructions to stdout."""
     print(f"\n-----Assembly-Instructions------")
     print(target)
     return 0

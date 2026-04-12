@@ -18,9 +18,9 @@ class InterferenceGraph:
         self.analyzer = analyzer
         # Adjacency list: key = variable name, value = set of interfering variables
         self.adj_list = {}
-        #will be a dict assinging each variable to a "colour"
+        # A dict that maps each variable to a register number (its "colour")
         self.allocations = {}
-        #lits of variables to assing to register "colours"
+        # A sorted list of all variables to be assigned registers
         self.variables = []
         # Build the graph immediately upon initialization
         self.build()
@@ -67,12 +67,12 @@ class InterferenceGraph:
             self.adj_list[v].add(u)
     
     def allocate_registers(self, num_registers):
-        """resets our list of register allocations and allocates new ones"""
+        """Resets our list of register allocations and allocates new ones"""
         self.allocations = {}
         return self._colouring_solver(0, num_registers)
 
     def _colouring_solver(self, variable_index, n):
-        """Recursively allocates registers to vvariables as long as they are not adjacent"""
+        """Recursively allocates registers to variables as long as they are not adjacent"""
         num_registers = len(self.variables)
         if variable_index == num_registers:
             return True
