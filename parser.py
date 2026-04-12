@@ -3,9 +3,9 @@
 
 import sys
 from threeAddress import ThreeAddressInstruction, IntermediateCode
-from parserHelper import parseLiveLine, isValidVariable, isValidOperand
+from parserHelper import parse_live_line, is_valid_variable, is_valid_operand
 
-def readIntermediateCode(filename):
+def read_intermediate_code(filename):
     """Reads and parses input file into an IntermediateCode object."""
     try:
         with open(filename, 'r') as file:
@@ -23,20 +23,20 @@ def readIntermediateCode(filename):
 
     # Process all but the last line (instructions)
     for i in range(last_line_index):
-        instr = read3AddrInstruction(lines[i], i + 1)
+        instr = read_3_addr_instruction(lines[i], i + 1)
         if instr is None:
             return None 
         code.add_instruction(instr)
     
     # Process the last line (live-on-exit)
-    live_vars = parseLiveLine(lines[-1], len(lines))
+    live_vars = parse_live_line(lines[-1], len(lines))
     if live_vars is None:
         return None  
     
     code.set_live_on_exit(live_vars)
     return code
 
-def read3AddrInstruction(line, line_num):
+def read_3_addr_instruction(line, line_num):
     """Main router for parsing a single line of TAC."""
     line = line.strip()
     if not line:
@@ -49,7 +49,7 @@ def read3AddrInstruction(line, line_num):
         return None
     
     # Validate destination and equals sign
-    if not isValidVariable(tokens[0]):
+    if not is_valid_variable(tokens[0]):
         print(f"Error on line {line_num}: Invalid destination '{tokens[0]}'", file=sys.stderr)
         return None
     if tokens[1] != '=':
@@ -80,12 +80,12 @@ def _create_assignment(dst, src, line_num):
     # Check for compact unary negation: dst = -src
     if src.startswith('-') and len(src) > 1:
         operand = src[1:]
-        if not isValidOperand(operand):
+        if not is_valid_operand(operand):
             print(f"Error on line {line_num}: Invalid operand '{operand}'", file=sys.stderr)
             return None
         return ThreeAddressInstruction(dst, operand, '-', None)
     
-    if not isValidOperand(src):
+    if not is_valid_operand(src):
         print(f"Error on line {line_num}: Invalid operand '{src}'", file=sys.stderr)
         return None
     return ThreeAddressInstruction(dst, src, None, None)
@@ -94,13 +94,13 @@ def _create_unary(dst, op, src, line_num):
     if op != '-':
         print(f"Error on line {line_num}: Expected '-' negation", file=sys.stderr)
         return None
-    if not isValidOperand(src):
+    if not is_valid_operand(src):
         print(f"Error on line {line_num}: Invalid operand '{src}'", file=sys.stderr)
         return None
     return ThreeAddressInstruction(dst, src, '-', None)
 
 def _create_binary(dst, src1, op, src2, line_num):
-    if not isValidOperand(src1) or not isValidOperand(src2):
+    if not is_valid_operand(src1) or not is_valid_operand(src2):
         print(f"Error on line {line_num}: Invalid operand(s)", file=sys.stderr)
         return None
     if op not in ['+', '-', '*', '/']:
@@ -115,7 +115,7 @@ if __name__ == "__main__":
     print("Testing variable validation:")
     test_vars = ["a", "b", "z", "t", "t1", "t23", "t100", "A", "ab", "1", "t", "tt"]
     for var in test_vars:
-        result = isValidVariable(var)
+        result = is_valid_variable(var)
         print(f"  '{var}': {result}")
     print()
     
@@ -123,7 +123,7 @@ if __name__ == "__main__":
     print("Testing operand validation:")
     test_ops = ["a", "t1", "5", "-10", "abc", "1.5"]
     for op in test_ops:
-        result = isValidOperand(op)
+        result = is_valid_operand(op)
         print(f"  '{op}': {result}")
     print()
     
@@ -138,7 +138,7 @@ if __name__ == "__main__":
         ("invalid line", 6)
     ]
     for line, num in test_lines:
-        instr = read3AddrInstruction(line, num)
+        instr = read_3_addr_instruction(line, num)
         if instr:
             print(f"  Line {num}: {instr}")
         else:
@@ -154,5 +154,5 @@ if __name__ == "__main__":
         ("live: t1, t2", 4)
     ]
     for line, num in test_lives:
-        result = parseLiveLine(line, num)
+        result = parse_live_line(line, num)
         print(f"  '{line}': {result}")

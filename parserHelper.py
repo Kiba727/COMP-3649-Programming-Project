@@ -1,6 +1,6 @@
 import sys
 
-def parseLiveLine(line, line_num):
+def parse_live_line(line, line_num):
     """
     Parses the "live:" line at the end of the input file.
     
@@ -33,7 +33,7 @@ def parseLiveLine(line, line_num):
         var = var_str.strip()
         if not var:
             continue  # Skip empty strings from consecutive commas
-        if not isValidVariable(var):
+        if not is_valid_variable(var):
             print(f"Error on line {line_num}: Invalid variable name '{var}' in live list", file=sys.stderr)
             return None
         variables.append(var)
@@ -41,7 +41,7 @@ def parseLiveLine(line, line_num):
     return variables
 
 
-def isValidVariable(name):
+def is_valid_variable(name):
     """
     Checks if a name is a valid variable according to the spec.
     
@@ -69,7 +69,7 @@ def isValidVariable(name):
     return False
 
 
-def isValidOperand(operand):
+def is_valid_operand(operand):
     """
     Checks if an operand is valid variable or integer literal
     
@@ -80,7 +80,7 @@ def isValidOperand(operand):
         True if valid, False otherwise
     """
     # Check if is a variable
-    if isValidVariable(operand):
+    if is_valid_variable(operand):
         return True
     
     # Check if is a number
