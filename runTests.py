@@ -1,7 +1,17 @@
-import sys
-from main import main
+# runTests.py
+# Automated test suite for the full compiler pipeline.
+# Tests are grouped into four categories:
+#   1. Command-line and argument validation
+#   2. Parser and syntax validation
+#   3. Standard functionality (correct inputs, expected outputs)
+#   4. Register allocation failures and edge cases
+# Each test calls main() with a specific set of arguments and prints the result.
 
-def run_test(test_name, args):
+import sys
+from main import main 
+
+def run_test(test_name, args): 
+    """Runs a single test by invoking main() with the given arguments and printing the result."""
     print(f"\n--- Running test: {test_name} ---")
     sys.argv = ["main.py"] + args
     try:

@@ -76,6 +76,7 @@ def _parse_by_token_count(tokens, line_num):
     return None
 
 def _create_assignment(dst, src, line_num):
+    """Creates a simple assignment or compact unary negation instruction (3-token case)."""
     # Check for compact unary negation: dst = -src
     if src.startswith('-') and len(src) > 1:
         operand = src[1:]
@@ -89,7 +90,8 @@ def _create_assignment(dst, src, line_num):
         return None
     return ThreeAddressInstruction(dst, src, None, None)
 
-def _create_unary(dst, op, src, line_num):
+def _create_unary(dst, op, src, line_num): 
+    """Creates a unary negation instruction (4-token case: dst = - src)."""
     if op != '-':
         print(f"Error on line {line_num}: Expected '-' negation", file=sys.stderr)
         return None
@@ -98,7 +100,8 @@ def _create_unary(dst, op, src, line_num):
         return None
     return ThreeAddressInstruction(dst, src, '-', None)
 
-def _create_binary(dst, src1, op, src2, line_num):
+def _create_binary(dst, src1, op, src2, line_num): 
+    """Creates a binary operation instruction (5-token case: dst = src1 op src2)."""
     if not is_valid_operand(src1) or not is_valid_operand(src2):
         print(f"Error on line {line_num}: Invalid operand(s)", file=sys.stderr)
         return None
