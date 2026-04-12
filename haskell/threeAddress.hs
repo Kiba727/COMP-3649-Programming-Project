@@ -45,21 +45,27 @@ makeInstruction = ThreeAddressInstruction
 makeIntermediateCode :: [ThreeAddressInstruction] -> [String] -> IntermediateCode
 makeIntermediateCode = IntermediateCode
 
+-- Retrieves the destination variable of an instruction.
 getDst :: ThreeAddressInstruction -> String
 getDst = dst
 
+-- Retrieves the first source operand of an instruction.
 getSrc1 :: ThreeAddressInstruction -> String
 getSrc1 = src1
 
+-- Retrieves the operator of an instruction, if one exists.
 getOp :: ThreeAddressInstruction -> Maybe String
 getOp = op
 
+-- Retrieves the second source operand of an instruction, if one exists.
 getSrc2 :: ThreeAddressInstruction -> Maybe String
 getSrc2 = src2
 
+-- Retrieves the list of instructions from an intermediate code block.
 getInstructions :: IntermediateCode -> [ThreeAddressInstruction]
 getInstructions = instruction
 
+-- Retrieves the list of variables that are live on exit from the block.
 getLiveOnExit :: IntermediateCode -> [String]
 getLiveOnExit = liveOnExit
 
@@ -84,5 +90,6 @@ isAssignment _ = False
 addInstruction :: IntermediateCode -> ThreeAddressInstruction -> IntermediateCode
 addInstruction code instr = code { instruction = instruction code ++ [instr] }
 
+-- Updates the live-on-exit list, returning a new IntermediateCode object.
 setLiveOnExit :: IntermediateCode -> [String] -> IntermediateCode
 setLiveOnExit code liveVars = code { liveOnExit = liveVars }

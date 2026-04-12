@@ -1,4 +1,6 @@
 -- interference.hs
+-- Builds a variable interference graph from live ranges and solves
+-- register allocation using graph colouring with backtracking.
 module Interference
   ( InterferenceGraph, -- Type exported, constructor hidden
     AdjList,

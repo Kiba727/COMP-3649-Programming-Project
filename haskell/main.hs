@@ -120,7 +120,8 @@ printTargetCode instrs = do
     putStrLn "\n--- Assembly Instructions ---"
     mapM_ (putStrLn . formatInstruction) instrs
 
--- Runs the full pipeline
+-- Runs the full compiler pipeline: liveness analysis, interference graph construction,
+-- register allocation, code generation, and finally writes the assembly output.
 runPipeline :: Int -> IntermediateCode -> FilePath -> IO ()
 runPipeline numRegs code inputFile = do
     let ranges = analyze code
