@@ -34,20 +34,25 @@ read3AddrInstruction line lineNum =
                                     ++ ": Invalid token count"
 
 parseAssignment :: String -> String -> Int -> Either String ThreeAddressInstruction
-parseAssignment d src lineNum
+parseAssignment d _ lineNum
     | not (isValidVariable d) =
         Left $ "Error on line " ++ show lineNum
             ++ ": Invalid destination '" ++ d ++ "'"
-    | head src == '-' && length src > 1 =
-        let operand = tail src
-        in if isValidOperand operand
-            then Right $ makeInstruction d operand (Just "-") Nothing
-            else Left $ "Error on line " ++ show lineNum
-                     ++ ": Invalid operand '" ++ operand ++ "'"
+parseAssignment d ('-':rest) lineNum
+    | null rest =
+        Left $ "Error on line " ++ show lineNum
+            ++ ": Invalid operand '-'"
+    | isValidOperand rest =
+        Right $ makeInstruction d rest (Just "-") Nothing
+    | otherwise =
+        Left $ "Error on line " ++ show lineNum
+            ++ ": Invalid operand '-" ++ rest ++ "'"
+parseAssignment d src lineNum
     | not (isValidOperand src) =
         Left $ "Error on line " ++ show lineNum
             ++ ": Invalid operand '" ++ src ++ "'"
-    | otherwise = Right $ makeInstruction d src Nothing Nothing
+    | otherwise =
+        Right $ makeInstruction d src Nothing Nothing
 
 parseUnary :: String -> String -> Int -> Either String ThreeAddressInstruction
 parseUnary d src lineNum
