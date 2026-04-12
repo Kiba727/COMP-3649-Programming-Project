@@ -1,5 +1,7 @@
 -- assemblyInstructions.hs
--- ADT for representing target assembly instructions.
+-- ADT for representing target assembly instructions. 
+-- Unlike our other modules, we use the (..) symbol here to export everything
+-- since assembly instructions are simple data containers that don't need strict gatekeeping.
 module AssemblyInstructions
     ( Opcode(..)
     , OperandType(..)
@@ -33,10 +35,13 @@ formatInstruction :: AssemblyInstruction -> String
 formatInstruction (AssemblyInstruction opc src dst) =
     show opc ++ " " ++ formatOperand src ++ "," ++ formatOperand dst
 
--- Format a full list of instructions, one per line
+-- The '.' operator works like a pipe: it maps our format function over the 
+-- list, then sends the result to 'unlines' to join them into a single string.
 formatTargetCode :: [AssemblyInstruction] -> String
 formatTargetCode = unlines . map formatInstruction
 
+-- Plug our formatting functions into Haskell's built in Show class
+-- so these types can be printed directly in GHCi and in other modules.
 instance Show Operand where
     show = formatOperand
 

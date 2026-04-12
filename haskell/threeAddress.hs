@@ -1,25 +1,21 @@
 -- threeAddress.hs
--- ADT with hidden constructors for encapsulation.
--- Outside modules must use the smart constructors and getter functions below.
+-- This module acts as a gatekeeper. We export the names of our data types, 
+-- but hide their internal parts so other files can't mess with them directly. 
+-- This follows the Week 10 guidance on encapsulation.
 module ThreeAddress
-    ( ThreeAddressInstruction   -- type exported, constructor hidden
-    , IntermediateCode          -- type exported, constructor hidden
-    -- Constructors
+    ( ThreeAddressInstruction   
+    , IntermediateCode          
     , makeInstruction
     , makeIntermediateCode
-    -- Getters for ThreeAddressInstruction
     , getDst
     , getSrc1
     , getOp
     , getSrc2
-    -- Getters for IntermediateCode
     , getInstructions
     , getLiveOnExit
-    -- Predicates
     , isBinary
     , isUnaryNegation
     , isAssignment
-    -- Builders
     , addInstruction
     , setLiveOnExit
     ) where
@@ -27,26 +23,28 @@ module ThreeAddress
 data ThreeAddressInstruction = ThreeAddressInstruction
     { dst  :: String
     , src1 :: String
+    -- We use the Maybe type as these fields can either hold something or null.
     , op   :: Maybe String
     , src2 :: Maybe String
-    } deriving (Show, Eq)
+    } deriving (Show, Eq) 
+    -- 'deriving' tells the compiler to automatically write the background code 
+    -- needed to print this object (Show) and check if two are identical (Eq), this is for debugging.
 
 data IntermediateCode = IntermediateCode
     { instruction :: [ThreeAddressInstruction]
     , liveOnExit  :: [String]
     } deriving (Show)
 
--- Smart constructor for a single instruction.
--- Validates nothing here (validation is the parser's job),
--- but construction is now gated through a single point.
+-- The only way for outside modules to create a ThreeAddressInstruction.
+-- Keeps construction gated through a single point.
 makeInstruction :: String -> String -> Maybe String -> Maybe String -> ThreeAddressInstruction
 makeInstruction = ThreeAddressInstruction
 
--- Smart constructor for an intermediate code block.
+-- The only way for outside modules to create an IntermediateCode block.
+-- Bundles the instruction list and live-on-exit variables into one object.
 makeIntermediateCode :: [ThreeAddressInstruction] -> [String] -> IntermediateCode
 makeIntermediateCode = IntermediateCode
 
--- Getters for ThreeAddressInstruction
 getDst :: ThreeAddressInstruction -> String
 getDst = dst
 
@@ -59,27 +57,30 @@ getOp = op
 getSrc2 :: ThreeAddressInstruction -> Maybe String
 getSrc2 = src2
 
--- Getters for IntermediateCode
 getInstructions :: IntermediateCode -> [ThreeAddressInstruction]
 getInstructions = instruction
 
 getLiveOnExit :: IntermediateCode -> [String]
 getLiveOnExit = liveOnExit
 
--- Predicates using pattern matching
+-- We use pattern matching to look directly inside the object. 
+-- If both the operator and the second source have 'Just' a value, it must be binary.
 isBinary :: ThreeAddressInstruction -> Bool
 isBinary (ThreeAddressInstruction _ _ (Just _) (Just _)) = True
 isBinary _ = False
 
+-- Matches exactly when the operator is Just "-" and there is Nothing in src2.
 isUnaryNegation :: ThreeAddressInstruction -> Bool
 isUnaryNegation (ThreeAddressInstruction _ _ (Just "-") Nothing) = True
 isUnaryNegation _ = False
 
+-- If both the operator and the second source are Nothing, it is a simple assignment.
 isAssignment :: ThreeAddressInstruction -> Bool
 isAssignment (ThreeAddressInstruction _ _ Nothing Nothing) = True
 isAssignment _ = False
 
--- Builders
+-- Variables in Haskell are immutable. This syntax doesn't modify the existing 
+-- object, but creates a brand new copy of 'code' with the updated field.
 addInstruction :: IntermediateCode -> ThreeAddressInstruction -> IntermediateCode
 addInstruction code instr = code { instruction = instruction code ++ [instr] }
 

@@ -13,7 +13,7 @@ import Interference (buildAdjList, colouringSolver, getUniqueVars, Allocations, 
 import AssemblyInstructions (AssemblyInstruction, formatTargetCode, formatInstruction)
 import CodeGen (generateTargetCode)
 
--- GHCi entry point: run 4 "tests/test1.txt"
+-- GHCi entry point for manual testing without command-line arguments.
 run :: Int -> FilePath -> IO ()
 run numRegs inputFile = do
     parseResult <- readIntermediateCode inputFile
@@ -59,7 +59,7 @@ validateLiveOnExit code =
         []    -> Right ()
         (v:_) -> Left $ "Variable '" ++ v ++ "' listed as live but does not appear in code"
 
--- Collects all variable names from a single instruction
+-- Collects all variable names from a single instruction for validation purposes.
 getVarsFromInstr :: ThreeAddressInstruction -> [String]
 getVarsFromInstr instr =
     filter isValidVariable $
@@ -96,13 +96,13 @@ printColouringTable allocs = do
     printReg (reg, vs) =
         putStrLn $ "  R" ++ show reg ++ ": " ++ joinWith ", " (sort vs)
 
--- Joins a list of strings with a separator
+-- Joins a list of strings with a separator, similar to Python's str.join().
 joinWith :: String -> [String] -> String
 joinWith _ []       = ""
 joinWith _ [x]      = x
 joinWith sep (x:xs) = x ++ sep ++ joinWith sep xs
 
--- Derives the output filename from the input filename
+-- Strips the file extension and appends '.s' to derive the output filename.
 deriveOutputFile :: FilePath -> FilePath
 deriveOutputFile path =
     let base = reverse $ drop 1 $ dropWhile (/= '.') $ reverse path

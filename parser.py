@@ -1,5 +1,4 @@
 # parser.py
-# Week 3 input file parsing logic
 
 import sys
 from threeAddress import ThreeAddressInstruction, IntermediateCode

@@ -1,5 +1,4 @@
 # threeAddress.py
-# Week 3 intermediate-code data structures + support routines
 
 from parserHelper import is_valid_variable
 
